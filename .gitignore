@@ -11,7 +11,9 @@ build/
 .env
 .env.local
 .env.production
+.env.production.local
 frontend/.env.local
+backend/.env
 
 # Database
 *.db
@@ -37,5 +39,28 @@ Thumbs.db
 # Turbo
 .turbo/
 
-# Prisma migrations
+# Prisma
 backend/prisma/migrations/
+*.db-journal
+
+# Next.js
+frontend/.next/
+frontend/out/
+
+# Backend build
+backend/dist/
+
+# NPM
+package-lock.json
+npm-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.swp
+*.swo
+*~
+.directory

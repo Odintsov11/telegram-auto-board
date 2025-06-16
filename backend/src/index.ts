@@ -1,4 +1,4 @@
-// 📄 backend/src/index.ts (полностью исправленная версия)
+// 📄 backend/src/index.ts (версия для деплоя на Render)
 import express from 'express'
 import cors from 'cors'
 import { config } from './utils/config'
@@ -12,7 +12,8 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     config.WEBAPP_URL,
-    /\.ngrok-free\.app$/ // разрешаем любые ngrok адреса
+    /\.ngrok-free\.app$/, // разрешаем любые ngrok адреса
+    /\.onrender\.com$/ // разрешаем Render домены
   ],
   credentials: true
 }))
@@ -199,12 +200,15 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   })
 })
 
-// Start server and bot
+// Start server and bot - ЗАМЕНЯЕМ НА НОВУЮ ВЕРСИЮ
 async function startApp() {
   try {
+    // Используем PORT от Render или API_PORT
+    const port = process.env.PORT || config.API_PORT
+    
     // Запускаем API сервер
-    app.listen(config.API_PORT, () => {
-      logger.info(`API server started on port ${config.API_PORT}`)
+    app.listen(port, () => {
+      logger.info(`API server started on port ${port}`)
     })
 
     // Запускаем бота

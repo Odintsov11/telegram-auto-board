@@ -5,8 +5,8 @@ services:
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: npm install && npm run build:frontend
-    startCommand: npm run start:frontend
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -24,6 +24,8 @@ services:
         value: production
       - key: JWT_SECRET
         generateValue: true
+      - key: BACKEND_URL
+        value: https://telegram-auto-board-backend.onrender.com
 
   # Frontend Service
   - type: web
@@ -32,12 +34,14 @@ services:
     region: frankfurt
     plan: free
     buildCommand: cd frontend && npm install && npm run build
-    startCommand: cd frontend && npm start
+    startCommand: cd frontend && npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
         value: https://telegram-auto-board-backend.onrender.com/api
       - key: NODE_ENV
         value: production
+      - key: BACKEND_URL
+        value: https://telegram-auto-board-backend.onrender.com
 
 databases:
   - name: telegram-auto-board-db
