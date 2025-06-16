@@ -1,11 +1,11 @@
 // 📄 frontend/src/app/success/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 
-export default function SuccessPage() {
+function SuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [adId, setAdId] = useState<string | null>(null)
@@ -172,5 +172,17 @@ export default function SuccessPage() {
         </button>
       </div>
     </div>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-6 max-w-md">
+        <div className="text-center">Загрузка...</div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   )
 }
