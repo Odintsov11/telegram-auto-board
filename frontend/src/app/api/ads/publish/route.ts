@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Отправляем запрос на backend
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001'
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
     const backendResponse = await fetch(`${backendUrl}/api/ads/publish`, {
       method: 'POST',
       headers: {
