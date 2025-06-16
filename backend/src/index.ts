@@ -11,9 +11,8 @@ const app = express()
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://3892-109-243-3-95.ngrok-free.app',
-    /\.ngrok-free\.app$/,  // Разрешаем все ngrok домены
-    config.WEBAPP_URL
+    config.WEBAPP_URL,
+    /\.ngrok-free\.app$/ // разрешаем любые ngrok адреса
   ],
   credentials: true
 }))
