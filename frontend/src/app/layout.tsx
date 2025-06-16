@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
@@ -7,7 +7,14 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Авто Доска - Telegram Mini App',
   description: 'Создавайте и управляйте объявлениями о продаже автомобилей',
-  viewport: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no',
+}
+
+// ✅ Новый способ описания viewport в Next.js 13+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false
 }
 
 export default function RootLayout({
@@ -17,10 +24,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru">
-      <head>
-        <script src="https://telegram.org/js/telegram-web-app.js"></script>
-      </head>
       <body className={inter.className}>
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
         <main className="min-h-screen bg-background">
           {children}
         </main>
