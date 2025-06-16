@@ -3,10 +3,11 @@ services:
   - type: web
     name: telegram-auto-board-backend
     runtime: node
-    region: oregon # Изменен регион на поддерживаемый
+    region: oregon
     plan: free
-    buildCommand: cd backend && npm install && npm run build
-    startCommand: cd backend && npm start
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -31,10 +32,11 @@ services:
   - type: web
     name: telegram-auto-board-frontend
     runtime: node
-    region: oregon # Изменен регион на поддерживаемый
+    region: oregon
     plan: free
-    buildCommand: cd frontend && npm install && npm run build
-    startCommand: cd frontend && npm run start
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
         value: https://telegram-auto-board-backend.onrender.com/api
@@ -45,7 +47,7 @@ services:
 
 databases:
   - name: telegram-auto-board-db
-    region: oregon # Изменен регион на поддерживаемый
+    region: oregon
     plan: free
     databaseName: auto_board
     user: auto_board_user
