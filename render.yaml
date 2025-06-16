@@ -5,8 +5,8 @@ services:
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: cd frontend && npm install --include=dev && npm run build
-    startCommand: cd backend && npm start
+    buildCommand: npm install && npm run build:frontend
+    startCommand: npm run start:frontend
     envVars:
       - key: DATABASE_URL
         fromDatabase:
