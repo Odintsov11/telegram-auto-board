@@ -1,8 +1,0 @@
-{
-  "name": "tg-auto",
-  "private": true,
-  "scripts": {
-    "dev": "echo 'Please run dev from frontend or backend folder'",
-    "build": "echo 'Please run build from frontend or backend folder'"
-  }
-}
