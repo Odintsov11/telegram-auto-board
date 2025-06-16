@@ -1,9 +1,10 @@
+// 📄 backend/src/bot/index.ts (обновленная версия с экспортом)
 import { Bot } from 'grammy'
 import { config } from '../utils/config'
 import { logger } from '../utils/logger'
 
-// Создание бота
-const bot = new Bot(config.BOT_TOKEN)
+// Создание и экспорт бота
+export const bot = new Bot(config.BOT_TOKEN)
 
 // Команда /start
 bot.command('start', async (ctx) => {
@@ -23,15 +24,17 @@ bot.command('start', async (ctx) => {
     }
 
     await ctx.reply(
-      '🚗 *Добро пожаловать в Авто Доску!*\n\n' +
-      'Создавайте и управляйте объявлениями о продаже автомобилей\\.\n\n' +
-      '✨ *Возможности:*\n' +
-      '• Создание объявлений с фото\n' +
-      '• Автоматическая публикация в канале\n' +
-      '• Закрепление объявлений\n' +
-      '• Статистика просмотров',
+      `🚗 <b>Добро пожаловать в Авто Доску!</b>
+
+Создавайте и управляйте объявлениями о продаже автомобилей.
+
+✨ <b>Возможности:</b>
+• Создание объявлений с фото
+• Автоматическая публикация в канале
+• Закрепление объявлений
+• Статистика просмотров`,
       {
-        parse_mode: 'MarkdownV2',
+        parse_mode: 'HTML',
         reply_markup: keyboard
       }
     )
@@ -47,7 +50,6 @@ bot.on('message:web_app_data', async (ctx) => {
     const data = JSON.parse(ctx.message.web_app_data.data)
     logger.info('Received WebApp data:', data)
 
-    // Здесь будет обработка данных из Mini App
     await ctx.reply('✅ Данные получены! Обработка...')
   } catch (error) {
     logger.error('WebApp data error:', error)
@@ -61,16 +63,14 @@ bot.catch((err) => {
 })
 
 // Запуск бота
-async function startBot() {
+export async function startBot() {
   try {
     logger.info('Starting Telegram bot...')
     
-    // Устанавливаем команды бота
     await bot.api.setMyCommands([
       { command: 'start', description: 'Запустить бота' }
     ])
 
-    // Запускаем polling
     await bot.start()
     logger.info('Bot started successfully')
   } catch (error) {
@@ -89,5 +89,3 @@ process.once('SIGTERM', () => {
   logger.info('Received SIGTERM, stopping bot...')
   bot.stop()
 })
-
-startBot()

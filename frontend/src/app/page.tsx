@@ -1,38 +1,28 @@
+// 📄 frontend/src/app/page.tsx (исправленная версия)
 'use client'
 
 import { useEffect, useState } from 'react'
-
-interface TelegramWebApp {
-  ready(): void
-  expand(): void
-  initDataUnsafe: {
-    user?: {
-      id: number
-      first_name: string
-      username?: string
-    }
-  }
-}
-
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp: TelegramWebApp
-    }
-  }
-}
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/Button'
+import { TelegramUser } from '@/types/telegram'
 
 export default function HomePage() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<TelegramUser | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp
       tg.ready()
       tg.expand()
-      setUser(tg.initDataUnsafe.user)
+      // Правильная обработка undefined
+      setUser(tg.initDataUnsafe.user || null)
     }
   }, [])
+
+  const handleCreateAd = () => {
+    router.push('/create')
+  }
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-md">
@@ -65,9 +55,21 @@ export default function HomePage() {
           </div>
         </div>
         
-        <button className="w-full mt-6 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
-          Создать объявление
-        </button>
+        <div className="space-y-3 mt-6">
+          <Button 
+            onClick={handleCreateAd}
+            className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Создать объявление
+          </Button>
+          
+          <Button 
+            onClick={() => router.push('/history')}
+            className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            📋 Мои объявления
+          </Button>
+        </div>
       </div>
     </div>
   )
