@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const path = require('path')
+
 const nextConfig = {
   images: {
     domains: ['api.telegram.org'],
@@ -11,7 +13,11 @@ const nextConfig = {
           ? 'http://localhost:3001/api/:path*'
           : '/api/:path*',
       },
-    ];
+    ]
+  },
+  webpack: (config) => {
+    config.resolve.alias['@'] = path.resolve(__dirname, 'src')
+    return config
   },
 }
 
