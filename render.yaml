@@ -18,32 +18,13 @@ services:
       - key: CHANNEL_ID
         sync: false
       - key: WEBAPP_URL
-        sync: false
+        value: https://telegram-auto-board-frontend.vercel.app
       - key: API_PORT
         value: 10000
       - key: NODE_ENV
         value: production
       - key: JWT_SECRET
         generateValue: true
-      - key: BACKEND_URL
-        value: https://telegram-auto-board-backend.onrender.com
-
-  # Frontend Service
-  - type: web
-    name: telegram-auto-board-frontend
-    runtime: node
-    region: oregon
-    plan: free
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        value: https://telegram-auto-board-backend.onrender.com/api
-      - key: NODE_ENV
-        value: production
-      - key: BACKEND_URL
-        value: https://telegram-auto-board-backend.onrender.com
 
 databases:
   - name: telegram-auto-board-db
