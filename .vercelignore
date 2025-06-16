@@ -1,0 +1,10 @@
+backend/
+package.json
+turbo.json
+render.yaml
+docker-compose.yml
+Makefile
+*.sh
+.git/
+.gitignore
+README.md
