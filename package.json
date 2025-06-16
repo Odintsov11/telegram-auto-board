@@ -1,0 +1,14 @@
+{
+  "name": "tg-auto",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^1.10.12"
+  },
+  "workspaces": ["frontend", "backend"]
+}

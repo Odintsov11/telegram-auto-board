@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  telegramId BigInt   @unique @map("telegram_id")
+  username   String?
+  firstName  String?  @map("first_name")
+  lastName   String?  @map("last_name")
+  phone      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  isActive   Boolean  @default(true) @map("is_active")
+
+  ads      Ad[]
+  payments Payment[]
+  views    AdView[]
+
+  @@map("users")
+}
+
+model Ad {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @map("user_id")
+  carBrand       String    @map("car_brand")
+  carModel       String    @map("car_model")
+  carYear        String    @map("car_year")
+  engineType     String    @map("engine_type")
+  engineVolume   Float     @map("engine_volume")
+  mileage        Int
+  transmission   String
+  drive          String
+  description    String    @db.Text
+  city           String
+  price          Int
+  riaPrice       Int?      @map("ria_price")
+  contactPhone   String    @map("contact_phone")
+  contactUsername String   @map("contact_username")
+  
+  status           AdStatus @default(ACTIVE)
+  viewsCount       Int      @default(0) @map("views_count")
+  channelMessageId Int?     @map("channel_message_id")
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  publishedAt DateTime? @map("published_at")
+
+  user     User       @relation(fields: [userId], references: [id])
+  photos   AdPhoto[]
+  payments Payment[]
+  addons   AdAddon[]
+  views    AdView[]
+
+  @@map("ads")
+}
+
+model AdPhoto {
+  id         Int      @id @default(autoincrement())
+  adId       Int      @map("ad_id")
+  filePath   String   @map("file_path")
+  orderIndex Int      @default(0) @map("order_index")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@map("ad_photos")
+}
+
+model Payment {
+  id           Int           @id @default(autoincrement())
+  userId       Int           @map("user_id")
+  adId         Int?          @map("ad_id")
+  packageType  String        @map("package_type")
+  totalAmount  Decimal       @map("total_amount") @db.Decimal(10, 2)
+  status       PaymentStatus @default(COMPLETED)
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  user   User      @relation(fields: [userId], references: [id])
+  ad     Ad?       @relation(fields: [adId], references: [id])
+  addons AdAddon[]
+
+  @@map("payments")
+}
+
+model AdAddon {
+  id        Int      @id @default(autoincrement())
+  adId      Int      @map("ad_id")
+  paymentId Int?     @map("payment_id")
+  addonType String   @map("addon_type")
+  addonName String   @map("addon_name")
+  expiresAt DateTime? @map("expires_at")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ad      Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+  payment Payment? @relation(fields: [paymentId], references: [id])
+
+  @@map("ad_addons")
+}
+
+model AdView {
+  id       Int      @id @default(autoincrement())
+  adId     Int      @map("ad_id")
+  userId   Int?     @map("user_id")
+  viewedAt DateTime @default(now()) @map("viewed_at")
+
+  ad   Ad   @relation(fields: [adId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("ad_views")
+}
+
+enum AdStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
