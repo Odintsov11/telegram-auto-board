@@ -40,7 +40,8 @@ export default function PaymentPage() {
       await new Promise(resolve => setTimeout(resolve, 2000))
 
       // Получаем данные пользователя из Telegram
-      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user
+      const tg = window.Telegram?.WebApp
+      const tgUser = tg?.initDataUnsafe?.user
 
       // Подготавливаем данные для публикации
       const adId = Date.now().toString()
@@ -48,8 +49,9 @@ export default function PaymentPage() {
         id: adId,
         ...paymentData.adData,
         tariff: paymentData.tariff,
-        userId: tgUser?.id || 0,
-        userName: tgUser?.first_name || 'Пользователь'
+        userId: tgUser?.id,
+        userName: tgUser?.first_name || 'Пользователь',
+        initData: tg?.initData || ''
       }
 
       // Публикуем объявление в канал через Next.js API route
