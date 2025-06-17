@@ -1,5 +1,9 @@
 import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
+import multer, { FileFilterCallback } from 'multer'
+import path from 'path'
+import fs from 'fs'
+import { InputFile } from 'grammy'
 import { config } from './utils/config'
 import { logger } from './utils/logger'
 import { startBot } from './bot'
@@ -49,6 +53,34 @@ function extractTelegramUser(data: any): TelegramUserInfo | null {
 
 const app = express()
 
+// Directory for uploaded photos
+const uploadsDir = path.join(__dirname, '../uploads')
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true })
+}
+
+const storage = multer.diskStorage({
+  destination: (req: Request, file: Express.Multer.File, cb) => {
+    cb(null, uploadsDir)
+  },
+  filename: (req: Request, file: Express.Multer.File, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9)
+    cb(null, unique + path.extname(file.originalname))
+  }
+})
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true)
+    } else {
+      cb(new Error('Only image files are allowed'))
+    }
+  }
+})
+
 // Middleware
 app.use(cors({
   origin: [
@@ -61,12 +93,29 @@ app.use(cors({
   credentials: true
 }))
 app.use(express.json())
+app.use('/uploads', express.static(uploadsDir))
 
 // Логирование запросов
 app.use((req: Request, res: Response, next: NextFunction) => {
   logger.info(`${req.method} ${req.path}`)
   next()
 })
+
+// Upload photos
+app.post('/api/upload', upload.array('photos', 10), (req: Request, res: Response) => {
+  try {
+    const files = req.files as Express.Multer.File[]
+    if (!files || files.length === 0) {
+      return res.status(400).json({ success: false, error: 'No files uploaded' })
+    }
+    const uploaded = files.map(f => ({ path: `/uploads/${f.filename}`, filename: f.originalname }))
+    res.json({ success: true, files: uploaded })
+  } catch (error) {
+    logger.error('Upload error:', error)
+    res.status(500).json({ success: false, error: 'Upload failed' })
+  }
+})
+
 
 // Публикация объявления
 app.post('/api/ads/publish', async (req: Request, res: Response) => {
@@ -100,7 +149,7 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
 
     const telegramUser = parsedUser
 
-    
+
     // Сохраняем в базу данных по Telegram ID
 
     let user = await prisma.user.findUnique({
@@ -139,6 +188,19 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
       }
     })
 
+    if (Array.isArray(adData.photoFiles) && adData.photoFiles.length > 0) {
+      const photoPromises = adData.photoFiles.map((p: any, index: number) =>
+        prisma.adPhoto.create({
+          data: {
+            adId: dbAd.id,
+            filePath: p.path,
+            orderIndex: index
+          }
+        })
+      )
+      await Promise.all(photoPromises)
+    }
+
     // Формируем текст объявления
     let message = `🚙 **${adData.brand} ${adData.model}**\n\n`
     
@@ -170,19 +232,30 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
     }
 
     // Публикуем в канал
-    let sentMessage;
-    
-    if (adData.photo) {
-      // Если есть фото - отправляем с фото
-      sentMessage = await bot.api.sendPhoto(config.CHANNEL_ID, adData.photo, {
-        caption: message.length > 1024 ? message.slice(0, 1020) + '...' : message,
-        parse_mode: 'Markdown'
-      })
-    } else {
-      // Если нет фото - отправляем текстовое сообщение
-      sentMessage = await bot.api.sendMessage(config.CHANNEL_ID, message, {
-        parse_mode: 'Markdown'
-      })
+    let sentMessage
+
+    if (Array.isArray(adData.photoFiles) && adData.photoFiles.length > 0) {
+      const localPath = path.join(uploadsDir, path.basename(adData.photoFiles[0].path))
+      if (fs.existsSync(localPath)) {
+        const inputFile = new InputFile(localPath)
+        sentMessage = await bot.api.sendPhoto(config.CHANNEL_ID, inputFile, {
+          caption: message.length > 1024 ? message.slice(0, 1020) + '...' : message,
+          parse_mode: 'Markdown'
+        })
+      }
+    }
+
+    if (!sentMessage) {
+      if (adData.photo) {
+        sentMessage = await bot.api.sendPhoto(config.CHANNEL_ID, adData.photo, {
+          caption: message.length > 1024 ? message.slice(0, 1020) + '...' : message,
+          parse_mode: 'Markdown'
+        })
+      } else {
+        sentMessage = await bot.api.sendMessage(config.CHANNEL_ID, message, {
+          parse_mode: 'Markdown'
+        })
+      }
     }
 
     // Сохраняем ID сообщения
