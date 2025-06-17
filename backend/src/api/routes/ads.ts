@@ -56,9 +56,6 @@ router.post('/publish', async (req, res) => {
       }
     })
 
-
-
-
     // Если премиум тариф - закрепляем сообщение
     if (adData.tariff.id.includes('premium') || adData.tariff.id === 'vip') {
       await bot.api.pinChatMessage(config.CHANNEL_ID, message.message_id)

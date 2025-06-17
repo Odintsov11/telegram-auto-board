@@ -1,4 +1,3 @@
-// 📄 backend/src/bot/index.ts (обновленная версия с экспортом)
 import { Bot } from 'grammy'
 import { config } from '../utils/config'
 import { logger } from '../utils/logger'

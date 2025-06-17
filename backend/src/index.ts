@@ -232,6 +232,17 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
     }
 
     // Публикуем в канал
+     const replyMarkup = {
+      inline_keyboard: [
+        [
+          {
+            text: '📲 Подать объявление',
+            url: 'https://t.me/myautoboard_bot/autoboard'
+          }
+        ]
+      ]
+    }
+
     let sentMessage
 
     if (Array.isArray(adData.photoFiles) && adData.photoFiles.length > 0) {
@@ -240,7 +251,8 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
         const inputFile = new InputFile(localPath)
         sentMessage = await bot.api.sendPhoto(config.CHANNEL_ID, inputFile, {
           caption: message.length > 1024 ? message.slice(0, 1020) + '...' : message,
-          parse_mode: 'Markdown'
+          parse_mode: 'Markdown',
+          reply_markup: replyMarkup
         })
       }
     }
@@ -249,11 +261,13 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
       if (adData.photo) {
         sentMessage = await bot.api.sendPhoto(config.CHANNEL_ID, adData.photo, {
           caption: message.length > 1024 ? message.slice(0, 1020) + '...' : message,
-          parse_mode: 'Markdown'
+          parse_mode: 'Markdown',
+          reply_markup: replyMarkup
         })
       } else {
         sentMessage = await bot.api.sendMessage(config.CHANNEL_ID, message, {
-          parse_mode: 'Markdown'
+          parse_mode: 'Markdown',
+          reply_markup: replyMarkup
         })
       }
     }
