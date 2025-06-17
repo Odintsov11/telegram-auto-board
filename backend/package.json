@@ -19,13 +19,13 @@
     "grammy": "^1.18.1",
     "multer": "^1.4.5-lts.1",
     "winston": "^3.10.0",
-    "zod": "^3.21.4"
-  },
-  "devDependencies": {
+    "zod": "^3.21.4",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.23",
     "@types/multer": "^1.4.13",
-    "@types/node": "^20.19.1",
+    "@types/node": "^20.19.1"
+  },
+  "devDependencies": {
     "prisma": "^5.1.1",
     "tsx": "^3.12.7",
     "typescript": "^5.1.6"
