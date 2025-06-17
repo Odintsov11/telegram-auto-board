@@ -3,7 +3,7 @@ import cors from 'cors'
 import multer, { FileFilterCallback } from 'multer'
 import path from 'path'
 import fs from 'fs'
-import { InputFile } from 'grammy'
+import { InputFile, InlineKeyboard } from 'grammy'
 import { config } from './utils/config'
 import { logger } from './utils/logger'
 import { startBot } from './bot'
@@ -232,16 +232,10 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
     }
 
     // Публикуем в канал
-     const replyMarkup = {
-      inline_keyboard: [
-        [
-          {
-            text: '📲 Подать объявление',
-            url: 'https://t.me/myautoboard_bot/autoboard'
-          }
-        ]
-      ]
-    }
+     const replyMarkup = new InlineKeyboard().url(
+      '📲 Подать объявление',
+      'https://t.me/myautoboard_bot/autoboard'
+    )
 
     let sentMessage
 
