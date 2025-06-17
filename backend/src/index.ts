@@ -48,9 +48,18 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
     // Проверяем бота
     const { bot } = await import('./bot')
 
-    // Сохраняем в базу данных
     // Определяем Telegram ID пользователя
-    let telegramId: number | undefined = adData.userId
+    let telegramId: number | undefined
+    let telegramUser: { id: number; username?: string; first_name?: string } | undefined
+
+    if (typeof adData.userId === 'string') {
+      const parsed = parseInt(adData.userId, 10)
+      if (!isNaN(parsed)) {
+        telegramId = parsed
+      }
+    } else if (typeof adData.userId === 'number') {
+      telegramId = adData.userId
+    }
 
     if (!telegramId && typeof adData.initData === 'string') {
       try {
@@ -58,6 +67,7 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
         const userParam = params.get('user')
         if (userParam) {
           const parsed = JSON.parse(userParam)
+          telegramUser = parsed
           telegramId = parsed.id
         }
       } catch (err) {
@@ -69,18 +79,19 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'User ID is required' })
     }
 
+
     // Сохраняем в базу данных по Telegram ID
 
     let user = await prisma.user.findUnique({
-      where: { telegramId: BigInt(telegramId) }
+       where: { telegramId: BigInt(telegramId) }
     })
 
     if (!user) {
       user = await prisma.user.create({
         data: {
           telegramId: BigInt(telegramId),
-          username: adData.userName || 'anonymous',
-          firstName: adData.userName || 'Пользователь'
+          username: telegramUser?.username || adData.userName || 'anonymous',
+          firstName: telegramUser?.first_name || adData.userName || 'Пользователь'
         }
       })
     }
