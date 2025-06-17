@@ -5,6 +5,48 @@ import { logger } from './utils/logger'
 import { startBot } from './bot'
 import { prisma } from './database/client'
 
+interface TelegramUserInfo {
+  id: number
+  username?: string
+  first_name?: string
+}
+
+function extractTelegramUser(data: any): TelegramUserInfo | null {
+  let telegramId: number | undefined
+  let username: string | undefined
+  let first_name: string | undefined
+
+  if (typeof data.userId === 'string') {
+    const parsed = parseInt(data.userId, 10)
+    if (!isNaN(parsed)) {
+      telegramId = parsed
+    }
+  } else if (typeof data.userId === 'number') {
+    telegramId = data.userId
+  }
+
+  if (!telegramId && typeof data.initData === 'string') {
+    try {
+      const params = new URLSearchParams(data.initData)
+      const userParam = params.get('user')
+      if (userParam) {
+        const parsed = JSON.parse(userParam)
+        telegramId = parsed.id
+        username = parsed.username
+        first_name = parsed.first_name
+      }
+    } catch (err) {
+      logger.error('Failed to parse initData:', err)
+    }
+  }
+
+  if (telegramId) {
+    return { id: telegramId, username, first_name }
+  }
+
+  return null
+}
+
 const app = express()
 
 // Middleware
@@ -49,37 +91,16 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
     const { bot } = await import('./bot')
 
     // Определяем Telegram ID пользователя
-    let telegramId: number | undefined
-    let telegramUser: { id: number; username?: string; first_name?: string } | undefined
-
-    if (typeof adData.userId === 'string') {
-      const parsed = parseInt(adData.userId, 10)
-      if (!isNaN(parsed)) {
-        telegramId = parsed
-      }
-    } else if (typeof adData.userId === 'number') {
-      telegramId = adData.userId
-    }
-
-    if (!telegramId && typeof adData.initData === 'string') {
-      try {
-        const params = new URLSearchParams(adData.initData)
-        const userParam = params.get('user')
-        if (userParam) {
-          const parsed = JSON.parse(userParam)
-          telegramUser = parsed
-          telegramId = parsed.id
-        }
-      } catch (err) {
-        logger.error('Failed to parse initData:', err)
-      }
-    }
+    const parsedUser = extractTelegramUser(adData)
+    const telegramId = parsedUser?.id
 
     if (!telegramId) {
       return res.status(400).json({ success: false, error: 'User ID is required' })
     }
 
+    const telegramUser = parsedUser
 
+    
     // Сохраняем в базу данных по Telegram ID
 
     let user = await prisma.user.findUnique({

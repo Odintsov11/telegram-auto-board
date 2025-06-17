@@ -1,4 +1,3 @@
-// 📄 backend/src/api/routes/ads.ts
 import { Router } from 'express'
 import { bot } from '../../bot'
 import { config } from '../../utils/config'
