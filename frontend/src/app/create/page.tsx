@@ -10,6 +10,7 @@ interface PhotoData {
   file: File
   url: string
   name: string
+  serverPath?: string
 }
 
 interface FormData {
@@ -51,9 +52,10 @@ export default function CreateAdPage() {
     photos: [],
     phone: '',
     telegram: '',
-    showPhone: true,
+    showPhone: false,
     showTelegram: false
   })
+  const [isUploading, setIsUploading] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
@@ -68,10 +70,21 @@ export default function CreateAdPage() {
         setFormData(prev => ({
           ...prev,
           telegram: telegramUser.username || '',
-          // phone поле убираем, так как Telegram WebApp не предоставляет номер телефона
-          showTelegram: !!telegramUser.username
+          showTelegram: !!telegramUser.username // Автоматически ставим галочку если есть username
         }))
       }
+    }
+
+    // Проверяем, не редактируем ли мы существующее объявление
+    const editData = localStorage.getItem('editAdData')
+    if (editData) {
+      const parsedData = JSON.parse(editData)
+      setFormData(prev => ({
+        ...prev,
+        ...parsedData,
+        photos: [] // Фото нужно загрузить заново
+      }))
+      localStorage.removeItem('editAdData')
     }
   }, [])
 
@@ -98,28 +111,93 @@ export default function CreateAdPage() {
     }))
   }
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '') // Только цифры
+    
+    // Форматирование номера телефона
+    if (value.length > 0) {
+      if (value.startsWith('8')) {
+        value = '7' + value.slice(1)
+      }
+      if (!value.startsWith('7')) {
+        value = '7' + value
+      }
+      
+      // Форматируем: +7 (999) 123-45-67
+      let formatted = '+7'
+      if (value.length > 1) {
+        formatted += ' (' + value.slice(1, 4)
+        if (value.length > 4) {
+          formatted += ') ' + value.slice(4, 7)
+          if (value.length > 7) {
+            formatted += '-' + value.slice(7, 9)
+            if (value.length > 9) {
+              formatted += '-' + value.slice(9, 11)
+            }
+          }
+        }
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        phone: formatted
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        phone: ''
+      }))
+    }
+  }
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length + formData.photos.length > 10) {
       alert('Максимум 10 фотографий')
       return
     }
 
-    // Преобразуем файлы в URL для отображения
-    const newPhotos = files.map(file => ({
-      file: file,
-      url: URL.createObjectURL(file),
-      name: file.name
-    }))
+    setIsUploading(true)
 
-    setFormData(prev => ({
-      ...prev,
-      photos: [...prev.photos, ...newPhotos]
-    }))
+    try {
+      // Загружаем файлы на сервер
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData()
+        formData.append('photos', file)
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        })
+        
+        if (!response.ok) {
+          throw new Error('Upload failed')
+        }
+        
+        const result = await response.json()
+        return {
+          file: file,
+          url: URL.createObjectURL(file),
+          name: file.name,
+          serverPath: result.files[0].path
+        }
+      })
+
+      const uploadedPhotos = await Promise.all(uploadPromises)
+      
+      setFormData(prev => ({
+        ...prev,
+        photos: [...prev.photos, ...uploadedPhotos]
+      }))
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Ошибка загрузки фотографий')
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const removePhoto = (index: number) => {
-    // Освобождаем память от URL
     const photoToRemove = formData.photos[index]
     if (photoToRemove?.url) {
       URL.revokeObjectURL(photoToRemove.url)
@@ -160,11 +238,13 @@ export default function CreateAdPage() {
       ...formData,
       mileageFormatted: `${formData.mileage} тыс.км`,
       priceFormatted: `${parseInt(formData.price).toLocaleString()} ₽`,
-      // Сохраняем только URL фотографий для предпросмотра
-      photoUrls: formData.photos.map(p => p.url)
+      photoUrls: formData.photos.map(p => p.url),
+      photoFiles: formData.photos.map(p => ({
+        path: p.serverPath || '',
+        name: p.name
+      }))
     }
 
-    // Сохраняем данные в localStorage для передачи на следующую страницу
     localStorage.setItem('adData', JSON.stringify(adData))
     router.push('/preview')
   }
@@ -197,7 +277,7 @@ export default function CreateAdPage() {
               <Input
                 value={formData.brand}
                 onChange={(e) => handleInputChange('brand', e.target.value)}
-                placeholder="Например: Mercedes..."
+                placeholder="BMW, Mercedes, Toyota..."
                 required
               />
             </div>
@@ -207,7 +287,7 @@ export default function CreateAdPage() {
               <Input
                 value={formData.model}
                 onChange={(e) => handleInputChange('model', e.target.value)}
-                placeholder="E-Class..."
+                placeholder="X5, E-Class, Camry..."
                 required
               />
             </div>
@@ -217,6 +297,8 @@ export default function CreateAdPage() {
                 <label className="block text-sm font-medium mb-1">Год *</label>
                 <Input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={formData.year}
                   onChange={(e) => handleInputChange('year', e.target.value)}
                   placeholder="2020"
@@ -230,6 +312,9 @@ export default function CreateAdPage() {
                 <label className="block text-sm font-medium mb-1">Пробег *</label>
                 <div className="relative">
                   <Input
+                    type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={formData.mileage}
                     onChange={handleMileageChange}
                     placeholder="160"
@@ -256,6 +341,9 @@ export default function CreateAdPage() {
                 <label className="block text-sm font-medium mb-1">Мощность</label>
                 <div className="relative">
                   <Input
+                    type="number"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={formData.power}
                     onChange={(e) => handleInputChange('power', e.target.value)}
                     placeholder="150"
@@ -309,6 +397,9 @@ export default function CreateAdPage() {
               <label className="block text-sm font-medium mb-1">Цена *</label>
               <div className="relative">
                 <Input
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={formData.price}
                   onChange={handlePriceChange}
                   placeholder="1500000"
@@ -346,8 +437,15 @@ export default function CreateAdPage() {
               accept="image/*"
               multiple
               onChange={handlePhotoUpload}
+              disabled={isUploading}
               className="w-full p-2 border rounded-lg"
             />
+            
+            {isUploading && (
+              <div className="text-center text-blue-500">
+                Загрузка фотографий...
+              </div>
+            )}
             
             {formData.photos.length > 0 && (
               <div className="grid grid-cols-3 gap-2">
@@ -384,10 +482,11 @@ export default function CreateAdPage() {
             <div>
               <label className="block text-sm font-medium mb-1">Телефон</label>
               <Input
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                placeholder="+7 (999) 123-45-67"
                 type="tel"
+                inputMode="numeric"
+                value={formData.phone}
+                onChange={handlePhoneChange}
+                placeholder="+7 (999) 123-45-67"
               />
               <label className="flex items-center mt-2">
                 <input
@@ -426,9 +525,10 @@ export default function CreateAdPage() {
 
         <Button 
           type="submit"
-          className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+          disabled={isUploading}
+          className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400"
         >
-          Далее: Предпросмотр
+          {isUploading ? 'Загрузка фото...' : 'Далее: Предпросмотр'}
         </Button>
       </form>
     </div>
