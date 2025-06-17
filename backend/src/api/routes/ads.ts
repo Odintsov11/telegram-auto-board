@@ -23,6 +23,7 @@ interface AdData {
   telegram?: string
   showPhone: boolean
   showTelegram: boolean
+  photo: string
   tariff: {
     id: string
     name: string
@@ -41,9 +42,23 @@ router.post('/publish', async (req, res) => {
     const messageText = formatAdMessage(adData)
 
     // Публикуем в канал
-    const message = await bot.api.sendMessage(config.CHANNEL_ID, messageText, {
-      parse_mode: 'Markdown'
+    const message = await bot.api.sendPhoto(config.CHANNEL_ID, adData.photo, {
+      caption: messageText.length > 1024 ? messageText.slice(0, 1020) + '...' : messageText,
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: '📲 Подать объявление',
+              url: 'https://t.me/myautoboard_bot/autoboard'
+            }
+          ]
+        ]
+      }
     })
+
+
+
 
     // Если премиум тариф - закрепляем сообщение
     if (adData.tariff.id.includes('premium') || adData.tariff.id === 'vip') {
