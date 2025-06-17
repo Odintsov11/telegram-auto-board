@@ -9,7 +9,6 @@ export const metadata: Metadata = {
   description: 'Создавайте и управляйте объявлениями о продаже автомобилей',
 }
 
-// ✅ Новый способ описания viewport в Next.js 13+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

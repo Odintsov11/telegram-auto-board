@@ -1,4 +1,3 @@
-// 📄 frontend/src/app/create/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -20,6 +19,7 @@ interface FormData {
   year: string
   engine: string
   power: string
+  transmission: string
   mileage: string
   drivetrain: string
   description: string
@@ -45,6 +45,7 @@ export default function CreateAdPage() {
     mileage: '',
     drivetrain: '',
     description: '',
+    transmission: '',
     city: '',
     price: '',
     photos: [],
@@ -196,7 +197,7 @@ export default function CreateAdPage() {
               <Input
                 value={formData.brand}
                 onChange={(e) => handleInputChange('brand', e.target.value)}
-                placeholder="Toyota, BMW, Mercedes..."
+                placeholder="Например: Mercedes..."
                 required
               />
             </div>
@@ -206,17 +207,8 @@ export default function CreateAdPage() {
               <Input
                 value={formData.model}
                 onChange={(e) => handleInputChange('model', e.target.value)}
-                placeholder="Camry, X5, E-Class..."
+                placeholder="E-Class..."
                 required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Модификация</label>
-              <Input
-                value={formData.modification}
-                onChange={(e) => handleInputChange('modification', e.target.value)}
-                placeholder="2.0 AT, AWD, Sport..."
               />
             </div>
 
@@ -273,6 +265,21 @@ export default function CreateAdPage() {
                   </span>
                 </div>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Коробка передач</label>
+              <select
+                value={formData.transmission}
+                onChange={(e) => handleInputChange('transmission', e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Выберите тип</option>
+                <option value="Автомат">Автомат</option>
+                <option value="Механика">Механика</option>
+                <option value="Вариатор">Вариатор</option>
+                <option value="Робот">Робот</option>
+              </select>
             </div>
 
             <div>

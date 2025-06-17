@@ -1,4 +1,3 @@
-// 📄 frontend/src/app/page.tsx (исправленная версия)
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -26,32 +25,36 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-md">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold mb-2">🚗 Авто Доска</h1>
-        <p className="text-gray-600">
-          Создавайте объявления о продаже автомобилей
-        </p>
-        {user && (
+      <div className="mb-6">
+         {user && (
           <p className="text-sm text-gray-500 mt-2">
             Привет, {user.first_name}! 👋
           </p>
         )}
+        <h1 className="text-2xl font-bold mb-2">Добро пожаловать в АвтоМаркет!</h1>
+        <p className="text-gray-600">
+          Создавайте и управляйте объявлениями о продаже автомобилей.
+        </p>
       </div>
 
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">🚀 Проект готов!</h2>
+        <h2 className="text-lg font-semibold mb-4">🚀 Возможности:</h2>
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
             <span className="text-green-500">✅</span>
-            <span>Frontend настроен</span>
+            <span>Создание объявлений с фото</span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-green-500">✅</span>
-            <span>Telegram WebApp подключен</span>
+            <span>Автоматическая публикация в канале</span>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-yellow-500">⏳</span>
-            <span>Настройте бота и БД</span>
+            <span className="text-yellow-500">✅</span>
+            <span>Закрепление объявлений</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-yellow-500">✅</span>
+            <span>Статистика просмотров</span>
           </div>
         </div>
         
@@ -60,7 +63,7 @@ export default function HomePage() {
             onClick={handleCreateAd}
             className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors"
           >
-            Создать объявление
+            ➕ Подать объявление
           </Button>
           
           <Button 

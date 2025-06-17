@@ -1,4 +1,3 @@
-// 📄 frontend/src/app/payment/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
