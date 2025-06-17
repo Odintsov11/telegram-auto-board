@@ -50,14 +50,15 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
 
     // Сохраняем в базу данных
     let user = await prisma.user.findUnique({
-      where: { telegramId: BigInt(adData.userId || 0) }
+      where: { telegramId: BigInt(adData.userId || 777) }
     })
 
-    if (!user && adData.userId) {
+    if (!user) {
+      // Создаем пользователя если не существует
       user = await prisma.user.create({
         data: {
-          telegramId: BigInt(adData.userId),
-          username: adData.userName || null,
+          telegramId: BigInt(adData.userId || 777),
+          username: adData.userName || 'anonymous',
           firstName: adData.userName || 'Пользователь'
         }
       })
@@ -66,18 +67,18 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
     // Создаем объявление в БД
     const dbAd = await prisma.ad.create({
       data: {
-        userId: user?.id || 1,
+        userId: user.id,
         carBrand: adData.brand,
         carModel: adData.model,
         carYear: adData.year,
         engineType: adData.engine || 'Не указан',
-        engineVolume: adData.power ? parseFloat(adData.power.replace(/[^\d.]/g, '')) : 2.0,
-        mileage: parseInt(adData.mileage) || 0,
+        engineVolume: 2.0, // Используем значение по умолчанию
+        mileage: parseInt(String(adData.mileage).replace(/[^\d]/g, '')) || 0,
         transmission: adData.transmission || 'Не указана',
         drive: adData.drivetrain || 'Не указан',
         description: adData.description || '',
         city: adData.city || '',
-        price: parseInt(adData.price.replace(/[^\d]/g, '')) || 0,
+        price: parseInt(String(adData.price).replace(/[^\d]/g, '')) || 0,
         contactPhone: adData.phone || '',
         contactUsername: adData.telegram || '',
         status: 'ACTIVE',
@@ -104,7 +105,8 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
       message += `📍 ${adData.city}\n\n`
     }
     
-    message += `💰 **${adData.price} ₽**\n\n`
+    const priceNumber = parseInt(String(adData.price).replace(/[^\d]/g, '')) || 0
+    message += `💰 **${priceNumber.toLocaleString('ru-RU')} ₽**\n\n`
     
     // Контакты
     if (adData.showPhone && adData.phone) {
@@ -115,10 +117,20 @@ app.post('/api/ads/publish', async (req: Request, res: Response) => {
     }
 
     // Публикуем в канал
-    const sentMessage = await bot.api.sendPhoto(config.CHANNEL_ID, adData.photo, {
-      caption: message.length > 1024 ? message.slice(0, 1020) + '...' : message,
-      parse_mode: 'Markdown'
-    })
+    let sentMessage;
+    
+    if (adData.photo) {
+      // Если есть фото - отправляем с фото
+      sentMessage = await bot.api.sendPhoto(config.CHANNEL_ID, adData.photo, {
+        caption: message.length > 1024 ? message.slice(0, 1020) + '...' : message,
+        parse_mode: 'Markdown'
+      })
+    } else {
+      // Если нет фото - отправляем текстовое сообщение
+      sentMessage = await bot.api.sendMessage(config.CHANNEL_ID, message, {
+        parse_mode: 'Markdown'
+      })
+    }
 
     // Сохраняем ID сообщения
     await prisma.ad.update({
